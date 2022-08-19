@@ -10,8 +10,19 @@ type CharactersListPropsType = {
 
 const CharactersList = ({movie}:CharactersListPropsType) => {
     let [characters, setCharacters] = useState<null | CharacterType[]>(null)
-    const [totalHeight, setTotalHeight] = useState(0)
     const [filterByGender, setfilterByGender] = useState('')
+    const [sortConfig, setSortConfig] = useState({key:'',direction:''})
+
+
+    const requestSort = (key:string) => {
+        let direction = 'ascending'
+
+        if(sortConfig.key === key && sortConfig.direction === 'ascending'){
+            direction = 'descending'
+        }
+
+        setSortConfig({key,direction})
+    }
 
     const fetchCharacters = useCallback(async ()=> {
         try {
@@ -29,13 +40,7 @@ const CharactersList = ({movie}:CharactersListPropsType) => {
                             height:response.data.height}
                 })
 
-                let h = 0
-
-                data.forEach(char => {
-                    h += parseInt(char.height) > 0 ? parseInt(char.height) : 0
-                })
-
-                setTotalHeight(h)
+              
                 setCharacters(data)
             }
             
@@ -58,19 +63,49 @@ const CharactersList = ({movie}:CharactersListPropsType) => {
       }
 
 
-      let h = totalHeight
-      if(filterByGender && characters){
-       characters = characters?.filter(char => char.gender === filterByGender)
-       
 
-        characters.forEach(char => {
-
-         h += parseInt(char.height) > 0 ? parseInt(char.height) : 0
-
-         })
-
-               
+      let filteredCharacters:CharacterType[] = []
+      if(characters){
+       filteredCharacters = [...characters]
+          
       }
+
+      if(filterByGender){
+        filteredCharacters = filteredCharacters.filter(char => char.gender === filterByGender)
+      }
+
+      let sortedCharacters:CharacterType[] = []
+      if(filteredCharacters){
+        sortedCharacters = [...filteredCharacters]
+           
+       }
+
+       if(sortConfig.key){
+        let key = sortConfig.key
+        sortedCharacters.sort((a:any,b:any) => {
+
+            if(a[key] < b[key]){
+                return sortConfig.direction === 'ascending' ? -1 : 1
+            }
+
+            if(a[key] > b[key]){
+                return sortConfig.direction === 'ascending' ? 1 : -1
+            }
+
+            return 0
+        })
+      }
+
+      let h = 0
+
+      sortedCharacters.forEach(char => {
+          h += parseInt(char.height) > 0 ? parseInt(char.height) : 0
+      })
+
+     
+
+
+
 
 
   return (
@@ -86,15 +121,15 @@ const CharactersList = ({movie}:CharactersListPropsType) => {
         <option value='female'>Female</option>
     </select>
     <table className='mt-8 table-auto border-separate border-spacing-2 border-spacing-2 border border-slate-500'><thead><tr>
-    <th className='border border-slate-300 bg-black p-4'>Name</th>
-    <th className='border border-slate-300 bg-black p-4'>Gender</th>
-    <th className='border w-10 border-slate-300 bg-black p-4'>Height</th>
+    <th onClick={() => requestSort('name')} className='border border-slate-300 bg-black p-4'>Name</th>
+    <th onClick={() => requestSort('gender')} className='border border-slate-300 bg-black p-4'>Gender</th>
+    <th onClick={() => requestSort('height')} className='border w-10 border-slate-300 bg-black p-4'>Height</th>
   </tr></thead>
-  <tbody>{characters && characters.map(character =>  <Character key={character.name}  character={character} />)}</tbody>
+  <tbody>{sortedCharacters && sortedCharacters.map(character =>  <Character key={character.name}  character={character} />)}</tbody>
   <tfoot>
     <tr>
         <td className='border border-slate-100 bg-black p-4'>Total</td>
-        <td className='border border-slate-100 bg-black p-4'>characters : {characters?.reduce((sum,_) => sum + 1,0)}</td>
+        <td className='border border-slate-100 bg-black p-4'>characters : {sortedCharacters?.reduce((sum,_) => sum + 1,0)}</td>
         <td className='border border-slate-100 bg-black p-4'>Heights : {h}cm ({(h/30.48).toFixed(0)}ft/{(h/2.54).toFixed(2)}in)</td>
     </tr>
   </tfoot>

@@ -50,7 +50,7 @@ function App() {
       setMovie(movie)
     }
 
-  },[title])
+  },[title,movies])
 
 
   const onChangeHandler = (e:React.ChangeEvent<HTMLSelectElement>) => {
